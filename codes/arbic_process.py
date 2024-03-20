@@ -329,7 +329,6 @@ def process_block(block):
 if __name__ == '__main__':
     if not os.path.exists('../../cache_arabic'):
         os.makedirs('../../cache_arabic')
-    tw_adj = sp.sparse.coo_matrix((1000, 1000), dtype=np.int8)
     print(f"load data from /home/lipu/smed/datasets/Arabic_Twitter/All_Arabic.npy ... ", end='')
     df = np.load("/home/lipu/smed/datasets/Arabic_Twitter/All_Arabic.npy", allow_pickle=True)
     print("\tDone")

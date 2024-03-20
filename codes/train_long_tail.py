@@ -13,7 +13,7 @@ from torch import nn, softmax
 from torch.optim.lr_scheduler import StepLR
 from transformers import AutoTokenizer
 
-from smed_model import PairPfxTuningEncoder
+from longtail_model import PairPfxTuningEncoder
 from utils import *
 
 logging.basicConfig(level=logging.WARN,

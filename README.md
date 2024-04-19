@@ -1,5 +1,5 @@
 # Codes of all methods
-file "RPLM_SED" is the code of "Relational Prompt-based Pre-trained Language Models for Social Event Detection" (Ours).
+file "RPLM-SED" is the code of "Relational Prompt-based Pre-trained Language Models for Social Event Detection" (Ours).
 
 file "LoRA-RPLM" is the code of the variants of RPLM_SED which are fine-tuned by using Low-Rank Adaptation (LoRA).
 
@@ -34,28 +34,22 @@ catastrophic-class events from various periods.
 # Function Mode
 offline + online  + Low-Resource + Long-tail Recognition
 
-## To run FinEvent Offline
-step 1-3 ditto (change the file path)
+## To run RPLM_SED Offline and online
+Step 1. run RPLM-SED/twitter_process.py for data preprocessing.
 
-step 4. run offline.py
+step 2. run RPLM-SED/train_long_tail.py. To change related paths, including the PLM used, model storage path, obtained message representation storage path, etc. Modify the parameter "offline" to False (online) or True (offline).
 
-## To run FinEvent Incremental
-step 1. run utils/generate_initial_features.py to generate the initial features for the messages
+## To run RPLM_SED Low-Resource
+Step 1. run RPLM-SED/arbic_process.py.py  for data preprocessing.
 
-step 2. run utils/custom_message_graph.py to construct incremental message graphs. To construct small message graphs for test purpose, set test=True when calling construct_incremental_dataset_0922(). To use all the messages (see Appendix of the paper for a statistic of the number of messages in the graphs), set test=False.
+step 2. run RPLM-SED/train_tail.py. To change related paths, including the PLM used, model storage path, obtained message representation storage path, etc. Modify the parameter "offline" to True.
 
-step 3. run utils/save_edge_index.py in advance to acclerate the training process.
+## To run RPLM_SED  Long-tail Recognition
+Step 1. run RPLM-SED/long_tail_process.py  for data preprocessing.
 
-step 4. run main.py
+step 2. run RPLM-SED/train_long_tail.py. To change related paths, including the PLM used, model storage path, obtained message representation storage path, etc.
 
 
-
-## To run FinEvent Cross-lingual
-step 1-3 ditto (change the file path)
-
-step 4. run main.py (Train a model from high-source dataset)
-
-step 5. run resume.py
 
 
 
@@ -63,20 +57,34 @@ step 5. run resume.py
 If you find this repository helpful, please consider citing the following paper.
 
 # Reference
-[1] Andrew J McMinn, Yashar Moshfeghi, and Joemon M Jose. 2013. Building a large-scale corpus for evaluating event detection on twitter. In Proceedings of the CIKM.ACM, 409–418.
+[1] Jiaqian Ren, Hao Peng, Lei Jiang, Jia Wu, Yongxin Tong, Lihong Wang, Xu Bai, Bo Wang, and Qiang Yang. 2021. Transferring knowledge
+distillation for multilingual social event detection. arXiv preprint arXiv:2108.03084 (2021), 1–31.
 
-[2] Cao, Yuwei, et al. "Knowledge-Preserving Incremental Social Event Detection via Heterogeneous GNNs." Proceedings of the Web Conference 2021. 2021.
+[2] Bang Liu, Fred X Han, Di Niu, Linglong Kong, Kunfeng Lai, and Yu Xu. 2020. Story forest: Extracting events and telling stories from
+breaking news. ACMTransactions on Knowledge Discovery from Data (TKDD) 14, 3 (2020), 1–28.
 
-[3] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. 2013. Efficient estimation of word representations in vector space. In Proceedings of ICLR.
+[3] Hao Peng, Ruitong Zhang, Shaoning Li, Yuwei Cao, Shirui Pan, and Philip S. Yu. 2022. Reinforced, incremental and cross-lingual event
+detection from social messages. IEEE Transactions on Pattern Analysis and Machine Intelligence 45, 1 (2022), 980–998.
 
-[4] David M Blei, Andrew Y Ng, and Michael I Jordan. 2003. Latent dirichlet allocation. JMLR 3, Jan (2003), 993–1022.
+[4] Yuwei Cao, Hao Peng, Jia Wu, Yingtong Dou, Jianxin Li, and Philip S. Yu. 2021. Knowledge-preserving incremental social event detection
+via heterogeneous gnns. In Proceedings ofthe Web Conference 2021. 3383–3395.
 
-[5] Matt Kusner, Yu Sun, Nicholas Kolkin, and Kilian Weinberger. 2015. From word embeddings to document distances. In Proceedings of the ICML. 957–966.
+[5] Jiaqian Ren, Lei Jiang, Hao Peng, Yuwei Cao, Jia Wu, Philip S. Yu, and Lifang He. 2022. From known to unknown: quality-aware
+self-improving graph neural network for open set social event detection. In Proceedings ofthe 31st ACM International Conference on
+Information & Knowledge Management. 1696–1705.
 
-[6] Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. 2018. Bert: Pre-training of deep bidirectional transformers for language understanding. arXiv preprint arXiv:1810.04805 (2018).
+[6] Hao Peng, Jianxin Li, Qiran Gong, Yangqiu Song, Yuanxing Ning, Kunfeng Lai, and Philip S. Yu. 2019. Fine-grained event categorization
+with heterogeneous graph convolutional networks. In Proceedings ofthe 28th International Joint Conference on Artificial Intelligence.
+3238–3245.
 
-[7] Hao Peng, Jianxin Li, Qiran Gong, Yangqiu Song, Yuanxing Ning, Kunfeng Lai, and Philip S. Yu. 2019. Fine-grained event categorization with heterogeneous graph convolutional networks. In Proceedings of the IJCAI. 3238–3245.
+[7] Jiaqian Ren, Hao Peng, Lei Jiang, Zhiwei Liu, Jia Wu, Zhengtao Yu, and Philip S. Yu. 2023. Uncertainty-guided Boundary Learning for
+Imbalanced Social Event Detection. IEEE Transactions on Knowledge and Data Engineering (2023), 1–15.
 
-[8] Bang Liu, Fred X Han, Di Niu, Linglong Kong, Kunfeng Lai, and Yu Xu. 2020. Story Forest: Extracting Events and Telling Stories from Breaking News. TKDD 14, 3 (2020), 1–28.
+[8] Andrew J McMinn, Yashar Moshfeghi, and Joemon M Jose. 2013. Building a large-scale corpus for evaluating event detection on twitter.
+In Proceedings ofthe 22nd ACM international conference on Information & Knowledge Management. ACM, 409–418.
 
-[9] Alex Graves and Jürgen Schmidhuber. 2005. Framewise phoneme classification with bidirectional LSTM and other neural network architectures. Neural networks 18, 5-6 (2005), 602–610.
+[9] Béatrice Mazoyer, Julia Cagé, Nicolas Hervé, and Céline Hudelot. 2020. A French Corpus for Event Detection on Twitter. In Proceedings
+ofthe Twelfth Language Resources and Evaluation Conference. 6220–6227.
+
+[10] Alaa Alharbi and Mark Lee. 2021. Kawarith: an Arabic Twitter corpus for crisis events. In Proceedings ofthe Sixth Arabic Natural
+Language ProcessingWorkshop. Association for Computational Linguistics, 42–52.

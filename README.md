@@ -34,7 +34,7 @@ catastrophic-class events from various periods.
 # Function Mode
 offline + online  + Low-Resource + Long-tail Recognition
 
-## To run RPLM_SED Offline and online
+## To run RPLM_SED offline and online
 Step 1. run RPLM-SED/twitter_process.py for data preprocessing.
 
 step 2. run RPLM-SED/train_long_tail.py. To change related paths, including the PLM used, model storage path, obtained message representation storage path, etc. Modify the parameter "offline" to False (online) or True (offline).

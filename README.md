@@ -47,9 +47,9 @@ step 2. run RPLM-SED/train.py. To change related paths, including the PLM used, 
 ## To run RPLM_SED  Long-tail Recognition
 Step 1. run RPLM-SED/long_tail_data_split.py for splitting long-tail datasets.
 
-Step 1. run RPLM-SED/long_tail_process.py  for data preprocessing.
+Step 2. run RPLM-SED/long_tail_process.py  for data preprocessing.
 
-step 2. run RPLM-SED/train_long_tail.py. To change related paths, including the PLM used, model storage path, obtained message representation storage path, etc.
+step 3. run RPLM-SED/train_long_tail.py. To change related paths, including the PLM used, model storage path, obtained message representation storage path, etc.
 
 
 

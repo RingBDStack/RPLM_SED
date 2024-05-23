@@ -9,19 +9,18 @@ import numpy as np
 import scipy as sp
 from sklearn.model_selection import train_test_split
 
-from datasets import DATA_PATH_12, DataItem12, SAMPLE_NUM_TWEET,WINDOW_SIZE
+from datasets import DATA_PATH_18, DataItem18, SAMPLE_NUM_TWEET
 
-MV_RELATIONS=True
-def to_sparse_matrix(feat_to_tw, tw_num, tao=0):
+
+def to_sparse_matrix(feat_to_tw, tw_num):
     tw_adj = sp.sparse.coo_matrix((tw_num, tw_num), dtype=np.int8)
     tw_adj = tw_adj.todok()  # convert to dok
     for f in feat_to_tw.keys():
         for i in feat_to_tw[f]:
             for j in feat_to_tw[f]:
-                tw_adj[i, j] += 1
+                tw_adj[i, j] = 1
 
-    tw_adj = tw_adj > tao
-    tw_adj = tw_adj.tocsr().astype(np.int8)
+    tw_adj = tw_adj.tocsr()
     return tw_adj
 
 
@@ -30,7 +29,7 @@ def build_entity_adj(data):
     feat_to_tw = {}
     for i, it in enumerate(data):
         feats = it.entities
-        feats = [e for e, t in feats]
+        # feats = [e for e, t in feats]
 
         for f in feats:
             f = f.lower()
@@ -56,6 +55,20 @@ def build_hashtag_adj(data):
     return to_sparse_matrix(feat_to_tw, tw_num)
 
 
+def build_user_adj(data):
+    tw_num = len(data)
+    feat_to_tw = {}
+    for i, it in enumerate(data):
+        feats = it.user_mentions
+        feats.append(it.user_name)
+
+        for f in feats:
+            if f not in feat_to_tw:
+                feat_to_tw[f] = set()
+            feat_to_tw[f].add(i)
+
+    return to_sparse_matrix(feat_to_tw, tw_num)
+
 def build_words_adj(data):
     tw_num = len(data)
     feat_to_tw = {}
@@ -69,22 +82,6 @@ def build_words_adj(data):
             feat_to_tw[f].add(i)
 
     return to_sparse_matrix(feat_to_tw, tw_num)
-
-
-def build_user_adj(data):
-    tw_num = len(data)
-    feat_to_tw = {}
-    for i, it in enumerate(data):
-        feats = it.user_mentions
-        feats.append(it.user_id)
-
-        for f in feats:
-            if f not in feat_to_tw:
-                feat_to_tw[f] = set()
-            feat_to_tw[f].add(i)
-
-    return to_sparse_matrix(feat_to_tw, tw_num)
-
 
 def build_creat_at_adj(data):
     tw_num = len(data)
@@ -117,12 +114,10 @@ def build_creat_at_adj(data):
 FEAT_COLS = [
     ("entities", build_entity_adj),
     ("hashtags", build_hashtag_adj),
-    ("user", build_user_adj),  # user_mentions and user_id
+    ("user", build_user_adj),
     ("words", build_words_adj),
 
-    # ("create_at", build_creat_at_adj)
 ]
-
 
 
 def tweet_to_event(data):
@@ -142,7 +137,7 @@ def build_feat_adj(data, cols):
     tw_num = len(data)
     tw_feat_idx = []
     feat_to_idx = {}
-    cols = [DataItem12._fields.index(c) for c in cols] if isinstance(cols, list) else [DataItem12._fields.index(cols)]
+    cols = [DataItem18._fields.index(c) for c in cols] if isinstance(cols, list) else [DataItem18._fields.index(cols)]
     for i, it in enumerate(data):
         feats = [
             list(itertools.chain(*it[c])) if isinstance(it[c], list) or isinstance(it[c], tuple) else [it[c]]
@@ -170,37 +165,35 @@ def build_feat_adj(data, cols):
     return tw_adj
 
 
-def split_train_test_validation(data: List):
-    block=[]
+def split_train_test_validation(data: List,  valid_size=0.2):
+    block = []
     off_dataset = []
     for i in range(len(data)):
         if i == 0:
             data_size = len(data[i])
-            valid_size = math.ceil(data_size *0.2)
+            valid_size = math.ceil(data_size * 0.2)
             train, valid = train_test_split(data[i], test_size=valid_size, random_state=42, shuffle=True)
             block.append({"train": train, "test": [], "valid": valid})
 
+            #creat offline dataset
             off_test_size = math.ceil(data_size * 0.2)
             off_valid_size = math.ceil(data_size * 0.1)
-            off_train,  off_test = train_test_split(data[i], test_size=off_test_size, random_state=42, shuffle=True)
+            off_train, off_test = train_test_split(data[i], test_size=off_test_size, random_state=42, shuffle=True)
             off_train, off_valid = train_test_split(off_train, test_size=off_valid_size, random_state=42, shuffle=True)
 
-            if not MV_RELATIONS:
-                print("creat offline dataset ...",end="\t")
-                off_dataset.append(process_block({"train": off_train, "test": off_test, "valid": off_valid}))
-                print("done")
+            print("creat offline dataset ...", end="\t")
+            off_dataset.append(process_block({"train": off_train, "test": off_test, "valid": off_valid}))
+            print("done")
 
-                print(f"save data to '/home/lipu/HP_event/cache/offline.npy' ... ", end='')
-                np.save('/home/lipu/HP_event/cache/offline.npy', off_dataset)
-                print("\tDone")
 
-        elif i % WINDOW_SIZE == 0:
+            print(f"save data to '/home/lipu/HP_event/cache_2018/offline.npy' ... ", end='')
+            np.save('/home/lipu/HP_event/cache_2018/offline.npy', off_dataset)
+            print("\tDone")
 
-            sub_data = []
-            for j in range(WINDOW_SIZE):
-                sub_data += data[i-j]
+        elif i % 3 == 0:
+            sub_data = data[i] + data[i - 1] + data[i - 2]
             sub_data_size = len(sub_data)
-            sub_valid_size = math.ceil( sub_data_size * 0.2)
+            sub_valid_size = math.ceil(sub_data_size * 0.2)
             train, valid = train_test_split(sub_data, test_size=sub_valid_size, random_state=42, shuffle=True)
             block.append({"train": train, "test": data[i], "valid": valid})
         else:
@@ -210,7 +203,7 @@ def split_train_test_validation(data: List):
 
 
 def split_into_blocks(data):
-    data = [DataItem12(*it) for it in data]
+    data = [DataItem18(*it) for it in data]
     data = sorted(data, key=lambda it: it.created_at)
     groups = itertools.groupby(data, key=lambda it: it.created_at.timetuple().tm_yday)
     groups = {k: list(g) for k, g in groups}
@@ -219,17 +212,18 @@ def split_into_blocks(data):
     blk0 = [groups[d] for d in days[:7]]
     blk0 = [it for b in blk0 for it in b]
 
-    day_blk = [groups[d] for d in days[7:-1]]
+    day_blk = [groups[d] for d in days[7:]]
 
     blocks = [blk0] + day_blk
     datacount = [len(sublist) for sublist in blocks]
 
-    # print("save block datas counts into '/home/lipu/HP_event/cache/datacount.npy' ", end='')
-    # np.save('/home/lipu/HP_event/cache/datacount.npy', datacount)
-    # print("done")
+    print("save block datas counts into '/home/lipu/HP_event/cache_2018/datacount.npy' ", end='')
 
+    np.save('/home/lipu/HP_event/cache_2018/datacount.npy', datacount)
+    print("done")
 
     return split_train_test_validation(blocks)
+
 
 def get_time_relation(tw_i, tw_j, delta: datetime.timedelta = datetime.timedelta(hours=4)):
     a, b = tw_i.created_at, tw_j.created_at
@@ -266,10 +260,7 @@ def make_train_samples(tw_adj, tw_to_ev, data):
 
         pos_idx, = np.nonzero(ev_tw_vec)
         p = sp.special.softmax(adj_i_tw_score.take(pos_idx))
-        if MV_RELATIONS:
-            pos_idx = np.random.choice(pos_idx, size=SAMPLE_NUM_TWEET)
-        else:
-            pos_idx = np.random.choice(pos_idx, size=SAMPLE_NUM_TWEET, p=p)
+        pos_idx = np.random.choice(pos_idx, size=SAMPLE_NUM_TWEET, p=p)
         # (tag, event, (tweet_a, tweet_b), [feats,])
         pos_pairs = [
             (
@@ -279,17 +270,15 @@ def make_train_samples(tw_adj, tw_to_ev, data):
             for j in pos_idx
         ]
         pairs.extend(pos_pairs)
-
+        # for t, e, ij, ff in pos_pairs:
+        #     if sum(ff) > 1:
+        #         print(t, e, ij, ff)
 
         neg_idx, = np.nonzero(1 - ev_tw_vec)
         adj_i_tw_score = np.exp(adj_i_tw - ev_tw_vec * 1e12)
 
         p = sp.special.softmax(adj_i_tw_score.take(neg_idx))
-        if MV_RELATIONS:
-            neg_idx = np.random.choice(neg_idx, size=SAMPLE_NUM_TWEET)
-        else:
-            neg_idx = np.random.choice(neg_idx, size=SAMPLE_NUM_TWEET, p=p)
-
+        neg_idx = np.random.choice(neg_idx, size=SAMPLE_NUM_TWEET, p=p)
         # (tag, event, (tweet_a, tweet_b), [feats,])
         neg_pairs = [
             (
@@ -299,7 +288,9 @@ def make_train_samples(tw_adj, tw_to_ev, data):
             for j in neg_idx
         ]
         pairs.extend(neg_pairs)
-
+        # for t, e, ij, ff in neg_pairs:
+        #     if sum(ff) > 1:
+        #         print(t, e, ij, ff)
     return pairs
 
 
@@ -319,10 +310,7 @@ def make_ref_samples(tw_adj, tw_to_ev, data):
     tw_idx = np.arange(tw_num)
     for i in range(tw_num):
         p = sp.special.softmax(np.exp(adj[i]))
-        if MV_RELATIONS:
-            ref_idx = np.random.choice(tw_idx, size=SAMPLE_NUM_TWEET * 3)
-        else:
-            ref_idx = np.random.choice(tw_idx, size=SAMPLE_NUM_TWEET * 3, p=p)
+        ref_idx = np.random.choice(tw_idx, size=SAMPLE_NUM_TWEET * 3, p=p)
         # (tag, event, (tweet_a, tweet_b), [feats,])
         ref_pairs = [
             (
@@ -334,14 +322,16 @@ def make_ref_samples(tw_adj, tw_to_ev, data):
         ]
         pairs.extend(ref_pairs)
 
-
+        # for t, e, ij, ff in ref_pairs:
+        #     if sum(ff) > 1:
+        #         print(t, e, ij, ff)
 
     return pairs
 
 
 def process_block(block):
     blk = {}
-    for name in ["train", "test","valid" ]:
+    for name in ["train", "valid", "test"]:
         data = block[name]
         tw_to_ev, ev_to_idx = tweet_to_event(data)
         tw_adj = build_feats_adj(data, FEAT_COLS)
@@ -357,19 +347,19 @@ def process_block(block):
             if data:
                 blk[name]["samples"] = make_train_samples(tw_adj, tw_to_ev, data)
             else:
-                blk[name]["samples"] =[]
+                blk[name]["samples"] = []
 
         if name == "test":
             if data:
                 blk[name]["samples"] = make_ref_samples(tw_adj, tw_to_ev, data)
             else:
-                blk[name]["samples"] =[]
+                blk[name]["samples"] = []
 
     return blk
 
 
 def pre_process(data):
-    print("split data into blocks... ")
+    print("split data into blocks... ", end='')
     blocks = split_into_blocks(data)
     print("\tDone")
 
@@ -377,8 +367,6 @@ def pre_process(data):
     data_blocks = []
     for i, blk in enumerate(blocks):
         print(i, end=" ")
-
-
         blk = process_block(blk)
         data_blocks.append(blk)
 
@@ -387,27 +375,19 @@ def pre_process(data):
 
 
 if __name__ == '__main__':
-    p_part1 = f'{DATA_PATH_12}/68841_tweets_multiclasses_filtered_0722_part1.npy'
-    p_part2 = f'{DATA_PATH_12}/68841_tweets_multiclasses_filtered_0722_part2.npy'
-    if not os.path.exists('../../cache_lp'):
-        os.makedirs('../../cache_lp')
+    np_data_file = f'{DATA_PATH_18}/All_French.npy'
 
-    print(f"load data from {DATA_PATH_12} ... ", end='')
-    np_part1 = np.load(p_part1, allow_pickle=True)
-    np_part2 = np.load(p_part2, allow_pickle=True)
-    np_data = np.concatenate((np_part1, np_part2), axis=0)
+    print(f"load data from {DATA_PATH_18} ... ", end='')
+    np_data = np.load(np_data_file, allow_pickle=True)
     print("\tDone")
+    if not os.path.exists('/home/lipu/HP_event/cache_2018'):
+        os.makedirs('/home/lipu/HP_event/cache_2018', exist_ok=True)
 
     blk_data = pre_process(np_data)
 
-    if MV_RELATIONS:
-        print(f"save data to '/home/lipu/HP_event/cache/twitter12_no_relations.npy' ... ", end='')
-        np.save('/home/lipu/HP_event/cache/twitter12_no_relations.npy', blk_data)
-        print("\tDone")
-    else:
-        print(f"save data to '../../cache_lp/twitter12.npy' ... ", end='')
-        np.save('../../cache_lp/twitter12.npy', blk_data)
-        print("\tDone")
 
+    print(f"save data to '/home/lipu/HP_event/cache_2018/twitter18.npy' ... ", end='')
+    np.save('/home/lipu/HP_event/cache_2018/twitter18.npy', blk_data)
+    print("\tDone")
 
     exit(0)

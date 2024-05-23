@@ -35,16 +35,18 @@ catastrophic-class events from various periods.
 offline + online  + Low-Resource + Long-tail Recognition
 
 ## To run RPLM_SED offline and online
-Step 1. run RPLM-SED/twitter_process.py for data preprocessing.
+Step 1. run RPLM-SED/twitter_12_process.py (event2012) or  RPLM-SED/twitter_18_process.py (event2018) for data preprocessing.
 
-step 2. run RPLM-SED/train_long_tail.py. To change related paths, including the PLM used, model storage path, obtained message representation storage path, etc. Modify the parameter "offline" to False (online) or True (offline).
+step 2. run RPLM-SED/train.py. To change related paths, including the PLM used, model storage path, obtained message representation storage path, etc. Modify the parameter "offline" to False (online) or True (offline).
 
 ## To run RPLM_SED Low-Resource
 Step 1. run RPLM-SED/arbic_process.py.py  for data preprocessing.
 
-step 2. run RPLM-SED/train_tail.py. To change related paths, including the PLM used, model storage path, obtained message representation storage path, etc. Modify the parameter "offline" to True.
+step 2. run RPLM-SED/train.py. To change related paths, including the PLM used, model storage path, obtained message representation storage path, etc. Modify the parameter "offline" to True.
 
 ## To run RPLM_SED  Long-tail Recognition
+Step 1. run RPLM-SED/long_tail_data_split.py for splitting long-tail datasets.
+
 Step 1. run RPLM-SED/long_tail_process.py  for data preprocessing.
 
 step 2. run RPLM-SED/train_long_tail.py. To change related paths, including the PLM used, model storage path, obtained message representation storage path, etc.
